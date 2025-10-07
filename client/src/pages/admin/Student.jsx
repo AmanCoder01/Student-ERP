@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 const Student = () => {
     const [formData, setFormData] = useState({
         name: '',
+        email:'',
         studentId: '',
         rollNumber: '',
         batch: '',
@@ -223,6 +224,15 @@ const Student = () => {
                             value={formData.name}
                             onChange={handleInputChange}
                             placeholder="Student Name"
+                            className="bg-gray-700 w-full py-2 px-4 text-white rounded-md"
+                            required
+                        />
+                        <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            placeholder="Student Email"
                             className="bg-gray-700 w-full py-2 px-4 text-white rounded-md"
                             required
                         />

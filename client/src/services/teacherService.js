@@ -98,8 +98,12 @@ export const teacherService = {
         try {
             dispatch(setLoading({ key: 'students', value: true }));
             const { data } = await api.get(`/teacher/section-students/${sectionId}`);
+            console.log(data);
+
             dispatch(setSectionStudents(data));
         } catch (error) {
+            console.log(error);
+
             toast.error("Failed to fetch students");
             dispatch(setError(error.message));
         } finally {

@@ -131,8 +131,13 @@ exports.getSectionStudents = async (req, res) => {
     try {
         const { sectionId } = req.params;
         const students = await Student.find({ section: sectionId }).select('name studentId rollNumber');
+        
+        console.log(students);
+        
         res.json(students);
     } catch (error) {
+        console.log(error);
+        
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
@@ -188,7 +193,7 @@ exports.getStudentAttendance = async (req, res) => {
             teacher: teacherId,
             subject: subjectId
         });
-        
+
         const totalClassesCount = totalClasses.length;
 
         if (totalClassesCount === 0) {

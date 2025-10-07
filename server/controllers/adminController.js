@@ -1,4 +1,3 @@
-const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
 const Department = require('../models/Department');
 const User = require('../models/User');
@@ -8,6 +7,7 @@ const Course = require('../models/Course');
 const Subject = require('../models/Subject');
 const Section = require('../models/Section');
 const Batch = require('../models/Batch');
+const Teacher = require('../models/Teacher');
 
 
 // @route   GET /api/admin/dashboard
@@ -341,28 +341,117 @@ exports.deleteSubject = async (req, res) => {
 
 
 // @route   POST /api/admin/teachers
+// exports.createTeacher = async (req, res) => {
+
+//     const { name, email, teacherId, department, designation, qualification, contactNumber, subjects } = req.body;
+
+//     console.log(req.body);
+
+//     if (!name || !email || !teacherId || !department || !designation || !qualification || !contactNumber || !subjects) {
+//         return res.status(404).json({
+//             success: false,
+//             message: "All fields are required"
+//         })
+//     }
+
+
+//     try {
+//         // Generate a random temporary password
+//         const password = crypto.randomBytes(8).toString('hex');
+
+//         // 1. Create the Teacher profile
+//         const teacherProfile = await Teacher.create({
+//             name,
+//             teacherId,
+//             designation,
+//             department,
+//             qualification,
+//             joiningDate: Date.now(),
+//             contactNumber,
+//             subjects
+//         });
+
+//         // 2. Create the User login
+//         const user = await User.create({
+//             email,
+//             password, // Password will be hashed automatically by the pre-save hook
+//             role: 'Teacher',
+//             profileId: teacherProfile._id
+//         });
+
+//         // 3. Link the user account back to the teacher profile
+//         teacherProfile.user = user._id;
+//         await teacherProfile.save();
+
+//         // 4. Send the welcome email with credentials
+//         const message = `Welcome to the College ERP! Your account has been created.\n\nEmail: ${email}\nPassword: ${password}\n\nPlease login and update your password immediately.`;
+
+//         await sendEmail({
+//             email: user.email,
+//             subject: 'Your Teacher Account Credentials',
+//             message
+//         });
+
+//         res.status(201).json({ success: true, teacherProfile });
+
+//     } catch (error) {
+//         console.error(error.message);
+//         // Add more robust error handling for duplicates (email/employeeId)
+//         res.status(400).json({ success: false, message: error.message });
+//     }
+// };
+
+// controllers/adminController.js
+
 exports.createTeacher = async (req, res) => {
+    console.log("hei");
+
+    // Text fields are in req.body
     const { name, email, teacherId, department, designation, qualification, contactNumber, subjects } = req.body;
 
+    // The uploaded file's info is in req.file
+    const profileImage = req.file;
 
+    console.log("Request Body:", req.body);
+    console.log("Request File:", req.file);
+
+    // Your validation should now work correctly
+    if (!name || !email || !teacherId || !department || !subjects) {
+        return res.status(400).json({ // Use 400 for bad request
+            success: false,
+            message: "Required fields are missing"
+        });
+    }
 
     try {
-        // Generate a random temporary password
-        const password = crypto.randomBytes(8).toString('hex');
-
-        // 1. Create the Teacher profile
-        const teacherProfile = await Teacher.create({
+        const teacherData = {
             name,
             teacherId,
-            department,
-            contactNumber,
             designation,
+            department,
             qualification,
-            joiningDate: Date.now(),
+            joiningDate: new Date(),
+            contactNumber,
+            // subjects: Array.isArray(subjects) ? subjects : [subjects] // Ensure subjects is an array
             subjects
-        });
+        };
 
-        // 2. Create the User login
+        // Here you would typically upload the file from req.file.buffer
+        // to a cloud service like Cloudinary and get a URL back.
+        // For now, we'll just simulate it.
+        if (req.file) {
+            // 2. Add the URL and public_id from Cloudinary to your teacher data
+            teacherData.profileImage = {
+                public_id: req.file.filename, // This is the public_id
+                url: req.file.path          // This is the secure URL
+            };
+        }
+
+        const teacherProfile = await Teacher.create(teacherData);
+
+        const password = crypto.randomBytes(8).toString('hex');
+
+
         const user = await User.create({
             email,
             password, // Password will be hashed automatically by the pre-save hook
@@ -383,11 +472,14 @@ exports.createTeacher = async (req, res) => {
             message
         });
 
-        res.status(201).json({ success: true, data: teacherProfile });
+        res.status(201).json({
+            success: true,
+            message: "Teacher created successfully!",
+            teacherProfile
+        });
 
     } catch (error) {
         console.error(error);
-        // Add more robust error handling for duplicates (email/employeeId)
         res.status(400).json({ success: false, message: error.message });
     }
 };
@@ -436,12 +528,22 @@ exports.createStudent = async (req, res) => {
             semester,
             guardian,
             address,
-            dob,
-            profileImage
+            dob
         } = req.body;
 
         // Generate a random temporary password
         const password = crypto.randomBytes(8).toString('hex');
+
+        let profileImage;
+
+
+        if (req.file) {
+            // 2. Add the URL and public_id from Cloudinary to your teacher data
+            profileImage = {
+                public_id: req.file.filename, // This is the public_id
+                url: req.file.path          // This is the secure URL
+            };
+        }
 
         // 1. Create the Student profile
         const studentProfile = await Student.create({
@@ -462,7 +564,7 @@ exports.createStudent = async (req, res) => {
         const user = await User.create({
             email,
             password,
-            role: "student",
+            role: "Student",
             profileId: studentProfile._id
         });
 

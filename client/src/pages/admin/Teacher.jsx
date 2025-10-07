@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 const Teacher = () => {
     const [formData, setFormData] = useState({
         name: '',
+        email: '',
         teacherId: '',
         designation: '',
         department: '',
@@ -33,6 +34,17 @@ const Teacher = () => {
 
     const dispatch = useDispatch();
     const { departments, subjects, teachers } = useSelector(state => state.admin);
+    console.log(formData);
+
+
+
+    const filterSubjectsByDepartment = () => {
+        // Use the .filter() method to return only the subjects that match.
+        // We use optional chaining (?.) to prevent errors if a subject is missing a course.
+        return subjects?.filter(subject => subject?.course?.department === formData.department);
+    };
+
+
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({
@@ -51,9 +63,9 @@ const Teacher = () => {
     };
 
     const filteredTeachers = teachers?.filter(teacher => {
-        const nameMatch = teacher.name.toLowerCase().includes(filters.name.toLowerCase());
-        const idMatch = teacher.teacherId.toLowerCase().includes(filters.teacherId.toLowerCase());
-        const deptMatch = teacher.department?.name.toLowerCase().includes(filters.department.toLowerCase());
+        const nameMatch = teacher?.name.toLowerCase().includes(filters.name.toLowerCase());
+        const idMatch = teacher?.teacherId.toLowerCase().includes(filters.teacherId.toLowerCase());
+        const deptMatch = teacher?.department?.name?.toLowerCase().includes(filters.department.toLowerCase());
         return nameMatch && idMatch && deptMatch;
     });
 
@@ -72,19 +84,31 @@ const Teacher = () => {
         }
     };
 
+    // Teacher.js component
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const form = new FormData();
+
+        // Loop through the state and append all fields
         Object.keys(formData).forEach(key => {
             if (key === 'subjects') {
-                form.append(key, JSON.stringify(formData[key]));
-            } else {
+                // Append each subject ID individually for better backend compatibility
+                formData.subjects.forEach(subjectId => {
+                    form.append('subjects[]', subjectId);
+                });
+            } else if (key === 'profileImage' && formData.profileImage) {
+                // Append the file if it exists
+                form.append(key, formData.profileImage);
+            } else if (formData[key]) {
+                // Append all other non-empty fields
                 form.append(key, formData[key]);
             }
         });
 
         let success;
         if (editingTeacher) {
+            // You'll need to create an updateTeacher function that also uses FormData
             success = await dispatch(adminService.updateTeacher(editingTeacher._id, form));
         } else {
             success = await dispatch(adminService.createTeacher(form));
@@ -95,6 +119,7 @@ const Teacher = () => {
             setIsOpen(false);
         }
     };
+
 
     const resetForm = () => {
         setFormData({
@@ -208,6 +233,15 @@ const Teacher = () => {
                         required
                     />
                     <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="Teacher Email"
+                        className="bg-gray-700 w-full py-2 px-4 text-white rounded-md"
+                        required
+                    />
+                    <input
                         type="text"
                         name="teacherId"
                         value={formData.teacherId}
@@ -261,19 +295,7 @@ const Teacher = () => {
                         placeholder="Contact Number"
                         className="bg-gray-700 w-full py-2 px-4 text-white rounded-md"
                     />
-                    {/* <select
-                        name="subjects"
-                        multiple
-                        value={formData.subjects}
-                        onChange={handleInputChange}
-                        className="bg-gray-700 w-full py-2 px-4 text-white rounded-md"
-                    >
-                        {subjects.map(subject => (
-                            <option key={subject._id} value={subject._id}>
-                                {subject.name}
-                            </option>
-                        ))}
-                    </select> */}
+
 
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-white mb-1">
@@ -287,7 +309,7 @@ const Teacher = () => {
                                 onChange={handleSubjectChange}
                                 className="bg-gray-700 w-full py-2 px-4 text-white rounded-md min-h-[120px]"
                             >
-                                {subjects.map(subject => (
+                                {filterSubjectsByDepartment()?.map(subject => (
                                     <option
                                         key={subject._id}
                                         value={subject._id}

@@ -3,6 +3,7 @@ const express = require('express');
 
 const { protect, authorize } = require('../middlewares/authMiddleware');
 const { getDashboardStats, addDepartment, getDepartments, createCourse, getCourses, createBatch, getBatches, createSection, getSections, createSubject, getSubjects, createTeacher, getTeachers, createStudent, getStudents, createNotice, deleteDepartment, deleteCourses, deleteBatch, deleteSubject, deleteSection, deleteTeacher } = require('../controllers/adminController');
+const upload = require('../utils/cloudinary');
 
 const router = express.Router();
 
@@ -47,7 +48,7 @@ router.delete("/subjects/:id", deleteSubject);
 
 
 // Teacher
-router.post("/teachers", createTeacher);
+router.post("/teachers", upload.single('profileImage'), createTeacher);
 router.get("/teachers", getTeachers);
 router.delete("/teachers/:id", deleteTeacher);
 
@@ -55,7 +56,7 @@ router.delete("/teachers/:id", deleteTeacher);
 
 
 // Student
-router.post('/students', createStudent);
+router.post('/students', upload.single('profileImage'), createStudent);
 router.get("/students", getStudents);
 
 

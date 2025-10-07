@@ -1,5 +1,5 @@
 import api from './api';
-import { getDepartments, addDepartment, deleteDepartment, getCourses, addCourse, deleteCourse, setDashboardData, getBatches, addBatch, deleteBatch, getSections, addSection, deleteSection, deleteSubject, addSubject, getSubjects, getTeachers, getStudents } from '../redux/slices/adminSlice';
+import { getDepartments, addDepartment, deleteDepartment, getCourses, addCourse, deleteCourse, setDashboardData, getBatches, addBatch, deleteBatch, getSections, addSection, deleteSection, deleteSubject, addSubject, getSubjects, getTeachers, getStudents, addTeacher } from '../redux/slices/adminSlice';
 import toast from 'react-hot-toast';
 
 export const adminService = {
@@ -189,15 +189,21 @@ export const adminService = {
     // Create new teacher
     createTeacher: (formData) => async (dispatch) => {
         try {
+            console.log(formData);
+
             const { data } = await api.post('/admin/teachers', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'  // Important for file upload
                 }
             });
-            dispatch(addTeacher(data.teacher));
+            console.log(data.teacherProfile);
+
+            dispatch(addTeacher(data.teacherProfile));
             toast.success(data.message);
             return true;
         } catch (error) {
+            console.log(error);
+
             toast.error(error.response?.data?.message || "Failed to create teacher");
             return false;
         }

@@ -9,13 +9,13 @@ const TakeAttendance = () => {
     // Get data and UI states from Redux store
     const { courses, subjects, batches, sections, students, currentSemester, loading } = useSelector(state => state.teacher);
 
-    console.log("Courses:", courses);
-    console.log("Subjects:", subjects);
-    console.log("Batches:", batches);
-    console.log("Sections:", sections);
-    console.log("Students:", students);
-    console.log("Current Semester:", currentSemester);
-    console.log("Loading:", loading);
+    // console.log("Courses:", courses);
+    // console.log("Subjects:", subjects);
+    // console.log("Batches:", batches);
+    // console.log("Sections:", sections);
+    // console.log("Students:", students);
+    // console.log("Current Semester:", currentSemester);
+    // console.log("Loading:", loading);
     
     // Local state for user's selections and form inputs
     const [selectedCourse, setSelectedCourse] = useState('');
