@@ -7,8 +7,11 @@ const initialState = {
     batches: [],
     sections: [],
     subjects: [],
-    teachers:[],
-    students:[]
+    teachers: [],
+    students: [],
+     totalStudents: 0,
+    studentPage: 1,
+    studentPages: 1,
 };
 
 const adminSlice = createSlice({
@@ -90,23 +93,44 @@ const adminSlice = createSlice({
         deleteTeacher: (state, action) => {
             state.teachers = state.teachers.filter(teacher => teacher._id !== action.payload);
         },
+
+
+        // getStudents: (state, action) => {
+        //     state.students = action.payload;
+        // },
+        // addStudent: (state, action) => {
+        //     state.students.push(action.payload);
+        // },
+        // updateStudent: (state, action) => {
+        //     state.students = state.students.map(student =>
+        //         student._id === action.payload._id ? action.payload : student
+        //     );
+        // },
+        // deleteStudent: (state, action) => {
+        //     state.students = state.students.filter(
+        //         student => student._id !== action.payload
+        //     );
+        // },
+
+        // --- STUDENTS (with pagination) ---
         getStudents: (state, action) => {
-            state.students = action.payload;
+            state.students = action.payload.students || [];
+            state.totalStudents = action.payload.total || 0;
+            state.studentPage = action.payload.page || 1;
+            state.studentPages = action.payload.pages || 1;
         },
         addStudent: (state, action) => {
             state.students.push(action.payload);
         },
         updateStudent: (state, action) => {
-            state.students = state.students.map(student =>
-                student._id === action.payload._id ? action.payload : student
+            state.students = state.students.map(s =>
+                s._id === action.payload._id ? action.payload : s
             );
         },
         deleteStudent: (state, action) => {
-            state.students = state.students.filter(
-                student => student._id !== action.payload
-            );
+            state.students = state.students.filter(s => s._id !== action.payload);
         },
-        
+
     },
 });
 

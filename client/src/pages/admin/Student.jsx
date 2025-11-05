@@ -1,5 +1,4 @@
-// pages/admin/Student.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { adminService } from '../../services/adminService';
 import { MdDelete } from 'react-icons/md';
@@ -7,17 +6,30 @@ import { FaEdit } from 'react-icons/fa';
 import Modal from '../../components/Modal';
 import ResponsiveTable from '../../components/ResponsiveTable';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
+import CSVUpload from './CSVUpload';
+import { RxAvatar } from 'react-icons/rx';
+import SearchBar from './SearchBar';
 
 const Student = () => {
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(6);
+    const [search, setSearch] = useState('');
+
+    const [csvUploading, setCsvUploading] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [editingStudent, setEditingStudent] = useState(null);
+
     const [formData, setFormData] = useState({
         name: '',
-        email:'',
+        email: '',
         studentId: '',
         rollNumber: '',
+        phone: '',
         batch: '',
         section: '',
         semester: '',
-        phone: '',
         guardianName: '',
         guardianPhone: '',
         address: '',
@@ -25,26 +37,15 @@ const Student = () => {
         profileImage: null
     });
 
-    const [isOpen, setIsOpen] = useState(false);
-    const [editingStudent, setEditingStudent] = useState(null);
-    const [filters, setFilters] = useState({
-        name: '',
-        studentId: '',
-        batch: ''
-    });
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(10);
+
+
 
     const dispatch = useDispatch();
-    const { batches, sections, students } = useSelector(state => state.admin);
+    const { batches, sections, students, totalStudents, studentPage, studentPages } = useSelector(state => state.admin);
 
-    
 
-    useEffect(() => {
-        dispatch(adminService.fetchStudents());
-        dispatch(adminService.fetchBatches());
-        dispatch(adminService.fetchSections());
-    }, [dispatch]);
+
+
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({
@@ -54,12 +55,7 @@ const Student = () => {
         setCurrentPage(1);
     };
 
-    const filteredStudents = students?.filter(student => {
-        const nameMatch = student.name.toLowerCase().includes(filters.name.toLowerCase());
-        const idMatch = student.studentId.toLowerCase().includes(filters.studentId.toLowerCase());
-        const batchMatch = student.batch?.name.toLowerCase().includes(filters.batch.toLowerCase());
-        return nameMatch && idMatch && batchMatch;
-    });
+
 
     const handleInputChange = (e) => {
         const { name, value, type, files } = e.target;
@@ -88,7 +84,7 @@ const Student = () => {
 
         Object.keys(formData).forEach(key => {
             if (key === 'guardianName' || key === 'guardianPhone') {
-                return; // Skip these as we're sending them as part of guardian object
+                return;
             }
             if (key === 'guardian') {
                 form.append(key, JSON.stringify(guardian));
@@ -153,58 +149,43 @@ const Student = () => {
         }
     };
 
-    // Pagination
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentStudents = filteredStudents?.slice(indexOfFirstItem, indexOfLastItem);
-    const pageCount = Math.ceil((filteredStudents?.length || 0) / itemsPerPage);
+
+
+    const currentStudents = students || [];
+    const pageCount = studentPages || Math.ceil((totalStudents || 0) / itemsPerPage);
+
+    console.log(students);
+    
+
+    useEffect(() => {
+        // fetch students when component mounts and whenever page/search changes
+        dispatch(adminService.fetchStudents(currentPage, itemsPerPage, search));
+        // also fetch batches/sections once (you can keep those separate)
+        dispatch(adminService.fetchBatches());
+        dispatch(adminService.fetchSections());
+    }, [dispatch, currentPage, itemsPerPage, search]);
+
+
 
     return (
-        <div className="px-4 sm:px-6 lg:px-8 py-8">
+        <div>
             {/* Header */}
             <div className="sm:flex sm:items-center sm:justify-between mb-6">
-                <h1 className="text-2xl sm:text-3xl font-bold">Students</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold dark:text-gray-300">Students</h1>
+                 <SearchBar search={search} setSearch={setSearch} setCurrentPage={setCurrentPage} />
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-full mt-3 sm:mt-0 sm:w-auto bg-black hover:bg-gray-800 py-2 px-4 sm:px-6 text-white rounded-md shadow-md transition"
+                    className="w-full mt-3 sm:mt-0 sm:w-auto bg-black hover:bg-gray-800 py-2 px-4 sm:px-6 text-white rounded-md shadow-md transition dark:bg-gray-800 mr-24"
                 >
                     + Add Student
                 </button>
             </div>
 
-            {/* Search Filters */}
-            <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input
-                        type="text"
-                        value={filters.name}
-                        onChange={(e) => handleFilterChange('name', e.target.value)}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        placeholder="Search by name..."
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Student ID</label>
-                    <input
-                        type="text"
-                        value={filters.studentId}
-                        onChange={(e) => handleFilterChange('studentId', e.target.value)}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        placeholder="Search by ID..."
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
-                    <input
-                        type="text"
-                        value={filters.batch}
-                        onChange={(e) => handleFilterChange('batch', e.target.value)}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        placeholder="Search by batch..."
-                    />
-                </div>
-            </div>
+
+            {/* CSV Bulk Upload Section */}
+            <CSVUpload csvUploading={csvUploading} setCsvUploading={setCsvUploading} />
+
+
 
             {/* Student Form Modal */}
             <Modal
@@ -274,7 +255,7 @@ const Student = () => {
                             <option value="">Select Batch</option>
                             {batches.map(batch => (
                                 <option key={batch._id} value={batch._id}>
-                                    {batch.name} - {batch.course?.name}
+                                    {batch.name}
                                 </option>
                             ))}
                         </select>
@@ -374,27 +355,28 @@ const Student = () => {
                 </form>
             </Modal>
 
+
             {/* Students Table */}
             <ResponsiveTable
                 headers={["S.No", "Profile", "Name", "ID", "Roll No", "Batch", "Section", "Semester", "Actions"]}
             >
                 {students?.map((student, index) => (
-                    <tr key={student._id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                    <tr key={student._id} className="dark:hover:bg-gray-900 dark:bg-gray-800">
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                         <td className="px-4 py-2">
                             <img
-                                src={student.profileImage?.url || '/default-avatar.png'}
+                                src={student.profileImage?.url || "https://cdn-icons-png.flaticon.com/512/2886/2886011.png"}
                                 alt={student.name}
                                 className="h-10 w-10 rounded-full object-cover"
                             />
                         </td>
-                        <td className="px-4 py-2">{student.name}</td>
-                        <td className="px-4 py-2">{student.studentId}</td>
-                        <td className="px-4 py-2">{student.rollNumber}</td>
-                        <td className="px-4 py-2">{student.batch?.name}</td>
-                        <td className="px-4 py-2">{student.section?.name}</td>
-                        <td className="px-4 py-2">{student.semester}</td>
-                        <td className="px-4 py-2">
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{student.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{student.studentId}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{student.rollNumber}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{student.batch?.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{student.section?.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{student.semester}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                             <div className="flex gap-4">
                                 <FaEdit
                                     onClick={() => handleEdit(student)}
@@ -412,14 +394,15 @@ const Student = () => {
                 ))}
             </ResponsiveTable>
 
+
             {/* Pagination */}
             {pageCount > 1 && (
                 <div className="flex justify-center mt-6">
-                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px dark:bg-gray-800">
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                             disabled={currentPage === 1}
-                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
                         >
                             Previous
                         </button>
@@ -427,11 +410,11 @@ const Student = () => {
                             <button
                                 key={i + 1}
                                 onClick={() => setCurrentPage(i + 1)}
-                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                    currentPage === i + 1
-                                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                }`}
+                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium 
+                                    ${currentPage === i + 1
+                                        ? 'z-10 bg-blue-50 dark:bg-blue-900 border-blue-500 text-blue-600 dark:text-blue-200'
+                                        : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                    }`}
                             >
                                 {i + 1}
                             </button>
@@ -439,7 +422,7 @@ const Student = () => {
                         <button
                             onClick={() => setCurrentPage(prev => Math.min(prev + 1, pageCount))}
                             disabled={currentPage === pageCount}
-                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
                         >
                             Next
                         </button>

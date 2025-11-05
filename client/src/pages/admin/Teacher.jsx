@@ -168,12 +168,12 @@ const Teacher = () => {
     }, [dispatch]);
 
     return (
-        <div className="px-4 sm:px-6 lg:px-8 py-8">
+        <div>
             <div className="sm:flex sm:items-center sm:justify-between mb-6">
-                <h1 className="text-2xl sm:text-3xl font-bold">Teachers</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold dark:text-gray-300">Teachers</h1>
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-full mt-3 sm:mt-0 sm:w-auto bg-black hover:bg-gray-800 py-2 px-4 sm:px-6 text-white rounded-md shadow-md transition"
+                    className="w-full mt-3 sm:mt-0 sm:w-auto bg-black hover:bg-gray-800 py-2 px-4 sm:px-6 text-white rounded-md shadow-md transition mr-24 dark:bg-gray-800"
                 >
                     + Add Teacher
                 </button>
@@ -182,7 +182,7 @@ const Teacher = () => {
             {/* Search Filters */}
             <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-400">Name</label>
                     <input
                         type="text"
                         value={filters.name}
@@ -192,7 +192,7 @@ const Teacher = () => {
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Teacher ID</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-400">Teacher ID</label>
                     <input
                         type="text"
                         value={filters.teacherId}
@@ -202,7 +202,7 @@ const Teacher = () => {
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-400">Department</label>
                     <input
                         type="text"
                         value={filters.department}
@@ -388,21 +388,21 @@ const Teacher = () => {
                 headers={["S.No", "Profile", "Name", "ID", "Department", "Designation", "Contact", "Actions"]}
             >
                 {currentTeachers?.map((teacher, index) => (
-                    <tr key={teacher._id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                        <td className="px-4 py-2">
+                    <tr key={teacher._id} className="hover:bg-gray-900 dark:bg-gray-800">
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                        <td className="px-4 py-2 ">
                             <img
                                 src={teacher.profileImage?.url || '/default-avatar.png'}
                                 alt={teacher.name}
                                 className="h-10 w-10 rounded-full object-cover"
                             />
                         </td>
-                        <td className="px-4 py-2">{teacher.name}</td>
-                        <td className="px-4 py-2">{teacher.teacherId}</td>
-                        <td className="px-4 py-2">{teacher.department?.name}</td>
-                        <td className="px-4 py-2">{teacher.designation}</td>
-                        <td className="px-4 py-2">{teacher.contactNumber}</td>
-                        <td className="px-4 py-2">
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{teacher.teacherId}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{teacher.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{teacher.department?.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{teacher.designation}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{teacher.contactNumber}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                             <div className="flex gap-4">
                                 <FaEdit
                                     onClick={() => handleEdit(teacher)}

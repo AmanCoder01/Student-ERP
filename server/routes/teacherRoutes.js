@@ -33,4 +33,6 @@ router.post('/student-attendance', getStudentAttendance);
 // (Bonus) Get attendance history for the teacher
 router.get('/attendance/history', getAttendanceHistory);
 
+router.get('/my-subjects', getTeacherSubjects);
+
 module.exports = router;

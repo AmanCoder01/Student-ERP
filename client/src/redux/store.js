@@ -3,6 +3,7 @@ import authReducer from "./slices/authSlice";
 import adminReducer from "./slices/adminSlice";
 import studentReducer from "./slices/studentSlice";
 import teacherReducer from "./slices/teacherSlice";
+import themeReducer  from "./slices/themeSlice";
 
 const store = configureStore({
     reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
         admin: adminReducer,
         student: studentReducer,
         teacher: teacherReducer,
+        theme: themeReducer, 
     },
     middleware: (getDefaultMiddleware) => {
         return getDefaultMiddleware({

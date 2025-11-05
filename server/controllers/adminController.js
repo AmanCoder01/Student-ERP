@@ -8,6 +8,10 @@ const Subject = require('../models/Subject');
 const Section = require('../models/Section');
 const Batch = require('../models/Batch');
 const Teacher = require('../models/Teacher');
+const fs = require('fs');
+const path = require('path');
+const csv = require('csv-parser');
+const { default: mongoose } = require('mongoose');
 
 
 // @route   GET /api/admin/dashboard
@@ -531,21 +535,20 @@ exports.createStudent = async (req, res) => {
             dob
         } = req.body;
 
-        // Generate a random temporary password
         const password = crypto.randomBytes(8).toString('hex');
 
         let profileImage;
 
 
         if (req.file) {
-            // 2. Add the URL and public_id from Cloudinary to your teacher data
             profileImage = {
-                public_id: req.file.filename, // This is the public_id
-                url: req.file.path          // This is the secure URL
+                public_id: req.file.filename,
+                url: req.file.path
             };
         }
 
-        // 1. Create the Student profile
+
+
         const studentProfile = await Student.create({
             name,
             studentId,
@@ -560,7 +563,7 @@ exports.createStudent = async (req, res) => {
             profileImage
         });
 
-        // 2. Create the User login
+
         const user = await User.create({
             email,
             password,
@@ -568,12 +571,11 @@ exports.createStudent = async (req, res) => {
             profileId: studentProfile._id
         });
 
-        // 3. Link the user account back to the student profile
         studentProfile.user = user._id;
         await studentProfile.save();
 
-        // 4. Send welcome email
         const message = `Welcome to the College ERP! Your account has been created.\n\nEmail: ${email}\nPassword: ${password}\n\nPlease login and update your password immediately.`;
+
 
         await sendEmail({
             email: user.email,
@@ -581,26 +583,294 @@ exports.createStudent = async (req, res) => {
             message
         });
 
-        res.status(201).json({ success: true, message: 'Student created and email sent', data: studentProfile });
+
+
+        res.status(201).json({
+            success: true,
+            message: 'Student created and email sent',
+            data: studentProfile
+        });
     } catch (error) {
-        console.error(error);
+        console.log(error);
         res.status(400).json({ success: false, message: error.message });
     }
 };
 
 
 
+// exports.getStudents = async (req, res) => {
+//     try {
+//         const students = await Student.find()
+//             .populate("user section")
+//             .populate({
+//                 path: "batch",
+//                 populate: {
+//                     path: "course",
+//                     populate: {
+//                         path: "department"
+//                     }
+//                 }
+//             });
+
+//         return res.status(200).json({ success: true, students });
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({ success: false, message: "Failed to fetch students" });
+//     }
+// };
+
 exports.getStudents = async (req, res) => {
     try {
-        const students = await Student.find()
-            .populate("user batch section"); // Populate actual references
+        // query params
+        const page = Math.max(1, parseInt(req.query.page || '1', 10));
+        const limit = Math.max(1, parseInt(req.query.limit || '10', 10));
+        const search = (req.query.search || '').trim();
 
-        return res.status(200).json({ success: true, students });
+        // build filter
+        let filter = {};
+        if (search) {
+            const regex = new RegExp(search, 'i'); // case-insensitive
+            filter = {
+                $or: [
+                    { name: regex },
+                    { studentId: regex },
+                    { rollNumber: regex }
+                ]
+            };
+        }
+
+        // total count for filter
+        const total = await Student.countDocuments(filter);
+
+        // fetch page
+        const students = await Student.find(filter)
+            .populate('user section')
+            .populate({
+                path: 'batch',
+                populate: {
+                    path: 'course',
+                    populate: {
+                        path: 'department'
+                    }
+                }
+            })
+            .sort({ name: 1 }) // optional: sort by name
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .lean();
+
+        const pages = Math.ceil(total / limit);
+
+        return res.status(200).json({
+            success: true,
+            students,
+            total,
+            page,
+            pages
+        });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ success: false, message: "Failed to fetch students" });
+        return res.status(500).json({ success: false, message: 'Failed to fetch students' });
     }
 };
+
+
+
+exports.bulkUploadStudents = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'CSV file is required' });
+    }
+
+    const filePath = req.file.path;
+    const results = [];
+    const errors = [];
+    let createdCount = 0;
+    let rowIndex = 1; // header row is 1, first data row => 2 (but we'll start counting from 1 for simplicity)
+
+    try {
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(filePath)
+                .pipe(csv({ mapHeaders: ({ header }) => header.trim() })) // trim headers
+                .on('data', (row) => {
+                    // store raw row and index for later processing
+                    results.push({ row, rowIndex: ++rowIndex });
+                })
+                .on('end', () => resolve())
+                .on('error', (err) => reject(err));
+        });
+
+        // Process rows sequentially to simplify resource usage and email sending.
+        // For performance, you can use concurrency with throttling (Promise.all with limit).
+        for (const { row, rowIndex } of results) {
+            // Extract and sanitise fields (case-insensitive header names)
+            const get = (key) => {
+                // csv-parser lowercases header? to be safe, try several variants
+                return (row[key] ?? row[key.toLowerCase()] ?? row[key.toUpperCase()] ?? '').toString().trim();
+            };
+
+            const studentId = get('studentId') || get('student_id');
+            const name = get('name');
+            const email = get('email');
+            const rollNumber = get('rollNumber') || get('roll_number');
+            const batch = get('batch');
+            const section = get('section');
+            const semester = get('semester');
+            const phone = get('phone');
+            const guardianName = get('guardianName') || get('guardian_name');
+            const guardianPhone = get('guardianPhone') || get('guardian_phone');
+            const address = get('address');
+            const dob = get('dob');
+            const profileImageUrl = get('profileImageUrl') || get('profile_image_url');
+
+            // Basic validation
+            if (!studentId || !name || !email) {
+                errors.push({ row: rowIndex, message: 'Missing required field (studentId/name/email)', row });
+                continue;
+            }
+
+
+
+            try {
+                // Check duplicates: studentId or email
+                const existingStudent = await Student.findOne({ studentId });
+                const existingUser = await User.findOne({ email });
+
+                if (existingStudent) {
+                    errors.push({ row: rowIndex, message: `Student with studentId ${studentId} already exists` });
+                    continue;
+                }
+                if (existingUser) {
+                    errors.push({ row: rowIndex, message: `User with email ${email} already exists` });
+                    continue;
+                }
+
+                // Prepare guardian object
+                const guardian = {
+                    name: guardianName || undefined,
+                    phone: guardianPhone || undefined
+                };
+
+                let batchId = batch;
+                let sectionId = section;
+
+                // 🔹 1. Resolve batch (by ID or name)
+                if (batch && !mongoose.isValidObjectId(batch)) {
+                    const foundBatch = await Batch.findOne({ name: batch });
+                    if (foundBatch) batchId = foundBatch._id;
+                    else {
+                        console.warn(`Batch not found for name: ${batch}`);
+                        errors.push({ row: rowIndex, message: `Batch not found: ${batch}` });
+                        continue; // skip this student
+                    }
+                }
+
+                // 🔹 2. Resolve section — but make sure it belongs to the same batch
+                if (section) {
+                    if (!mongoose.isValidObjectId(section)) {
+                        // Find the section by name AND batch
+                        const foundSection = await Section.findOne({
+                            name: section,
+                            batch: batchId, // 👈 ensures correct relationship
+                        });
+                        if (foundSection) sectionId = foundSection._id;
+                        else {
+                            console.warn(`Section '${section}' not found in batch '${batch}'`);
+                            errors.push({ row: rowIndex, message: `Section '${section}' not found in batch '${batch}'` });
+                            continue; // skip this student if mismatch
+                        }
+                    } else {
+                        // If section is already an ObjectId, validate that it belongs to batchId
+                        const foundSection = await Section.findById(section);
+                        if (foundSection && foundSection.batch.toString() === batchId.toString()) {
+                            sectionId = foundSection._id;
+                        } else {
+                            console.warn(`Section ${section} does not belong to batch ${batch}`);
+                            errors.push({ row: rowIndex, message: `Section does not belong to batch` });
+                            continue;
+                        }
+                    }
+                }
+
+                // Convert dob to valid format if it's in DD-MM-YYYY
+                let formattedDob = undefined;
+                if (dob) {
+                    // Detect if format is DD-MM-YYYY
+                    if (/^\d{2}-\d{2}-\d{4}$/.test(dob)) {
+                        const [day, month, year] = dob.split('-');
+                        formattedDob = `${year}-${month}-${day}`; // Convert to YYYY-MM-DD
+                    } else {
+                        formattedDob = dob; // Assume already valid
+                    }
+                }
+
+                // Create Student
+                const studentPayload = {
+                    name,
+                    studentId,
+                    rollNumber: rollNumber || undefined,
+                    batch: batchId || undefined,       // expect id, else implement lookup
+                    section: sectionId || undefined,
+                    semester: semester ? Number(semester) : undefined,
+                    phone: phone || undefined,
+                    guardian,
+                    address: address || undefined,
+                    dob: formattedDob || undefined,
+                    profileImage: profileImageUrl ? { public_id: null, url: profileImageUrl } : undefined
+                };
+
+                const studentDoc = await Student.create(studentPayload);
+
+                // Create user with random password
+                const password = crypto.randomBytes(8).toString('hex');
+
+                const userDoc = await User.create({
+                    email,
+                    password,
+                    role: 'Student',
+                    profileId: studentDoc._id
+                });
+
+                // Link students <-> user
+                studentDoc.user = userDoc._id;
+                await studentDoc.save();
+
+                // send welcome email (this can be slow; if file is large consider queuing)
+                const message = `Welcome to the College ERP! Your account has been created.\n\nEmail: ${email}\nPassword: ${password}\n\nPlease login and update your password immediately.`;
+                try {
+                    await sendEmail({ email: userDoc.email, subject: 'Your Student Account Credentials', message });
+                } catch (emailErr) {
+                    // do not stop the entire import on email errors — record and continue
+                    errors.push({ row: rowIndex, message: `Email send failed for ${email}: ${emailErr.message}` });
+                }
+
+                createdCount++;
+            } catch (errRow) {
+                // catch per-row errors and continue
+                errors.push({ row: rowIndex, message: errRow.message });
+                console.error(`Error processing row ${rowIndex}:`, errRow);
+            }
+        }
+
+        // done processing
+        // cleanup uploaded file
+        fs.unlink(filePath, (err) => {
+            if (err) console.warn('Failed to delete tmp csv', err);
+        });
+
+        return res.status(200).json({
+            success: true,
+            createdCount,
+            errors,
+        });
+
+    } catch (err) {
+        console.error(err);
+        // cleanup
+        try { fs.unlinkSync(filePath); } catch (e) { }
+        return res.status(500).json({ success: false, message: 'Failed to process CSV', error: err.message });
+    }
+};
+
 
 
 

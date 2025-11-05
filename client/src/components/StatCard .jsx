@@ -10,13 +10,13 @@ const StatCard = ({ icon, title, value, color }) => {
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-md flex items-center gap-6 transform hover:-translate-y-1 transition-transform duration-300">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex items-center gap-6 transform hover:-translate-y-1 transition-transform duration-300">
             <div className={`p-4 rounded-full ${colors[color]}`}>
                 {icon}
             </div>
             <div>
-                <p className="text-gray-500 font-medium">{title}</p>
-                <p className="text-3xl font-bold text-gray-800">{value}</p>
+                <p className="text-gray-500 dark:text-gray-300 font-medium">{title}</p>
+                <p className="text-3xl font-bold text-gray-800 dark:text-gray-300">{value}</p>
             </div>
         </div>
     );

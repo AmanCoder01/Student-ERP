@@ -5,6 +5,7 @@ import { HiMenuAlt3 } from 'react-icons/hi';
 import { IoMdClose } from 'react-icons/io';
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
+import ThemeToggleButton from '../components/ThemeToggleButton';
 
 const TeacherLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -20,22 +21,28 @@ const TeacherLayout = () => {
         { path: "/teacher", label: "Dashboard", end: true },
         { path: "/teacher/take-attendance", label: "Take Attendance" },
         { path: "/teacher/student-attendance", label: "Search Attendance" },
-        { path: "/teacher/attendance-history", label: "History" }
+        { path: "/teacher/attendance-history", label: "Attendance History" }
     ];
 
     const Sidebar = () => (
-        <div className="h-full flex flex-col p-5">
-            <h2 className="text-2xl font-bold mb-6">Teacher Portal</h2>
+       <div className="h-full flex flex-col p-5 ">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Teacher Portal</h2>
 
             {/* Navigation Links */}
             <nav className="flex flex-col flex-grow space-y-2">
                 {navLinks.map((link) => (
-                    <NavLink
+                   <NavLink
                         key={link.path}
                         to={link.path}
                         end={link.end}
-                        style={navLinkStyles}
-                        className="hover:bg-gray-700 p-2 rounded transition-colors"
+                        // Use a function in className for conditional styling
+                        className={({ isActive }) =>
+                            `p-2 rounded transition-colors ${
+                                isActive
+                                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' // Active link styles
+                                    : 'hover:bg-gray-200 dark:hover:bg-gray-700' // Inactive link hover styles
+                            }`
+                        }
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         {link.label}
@@ -48,13 +55,19 @@ const TeacherLayout = () => {
                 <NavLink
                     to="/teacher/profile"
                     style={navLinkStyles}
-                    className="hover:bg-gray-700 p-2 rounded block transition-colors"
+                    className={({ isActive }) =>
+                        `p-2 rounded block transition-colors ${
+                            isActive
+                                ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                                : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`
+                    }
                     onClick={() => setIsSidebarOpen(false)}
                 >
                     Profile
                 </NavLink>
                 <div
-                    className="hover:bg-gray-700 p-2 rounded block transition-colors cursor-pointer"
+                   className="hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded block transition-colors cursor-pointer"
                     onClick={() => dispatch(logout())}
                 >
                     Logout
@@ -66,7 +79,7 @@ const TeacherLayout = () => {
     return (
         <div className="flex h-screen">
             {/* Desktop Sidebar */}
-            <aside className="hidden md:block w-64 bg-gray-900 text-white">
+            <aside className="hidden md:block w-64 bg-gray-100 dark:bg-gray-900 dark:text-white">
                 <Sidebar />
             </aside>
 
@@ -107,7 +120,10 @@ const TeacherLayout = () => {
                 </header>
 
                 {/* Content */}
-                <main className="flex-1 p-6 bg-gray-100 overflow-auto">
+                <main className="flex-1 p-4 md:p-12 md:px-16  relative bg-gray-100 dark:bg-gray-900 overflow-auto">
+                    <div className='absolute right-20 top-14 animate-bounce '>
+                        <ThemeToggleButton/>
+                    </div>
                     <Outlet />
                 </main>
             </div>

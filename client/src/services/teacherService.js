@@ -1,5 +1,5 @@
 import api from './api'; // Your pre-configured axios instance
-import { setTeacherDashboardData, setLoading, setError, setCourses, setCourseDetails, setBatchDetails, setSectionStudents, clearAttendanceForm, setSearchedAttendance, setAttendanceHistory } from '../redux/slices/teacherSlice';
+import { setTeacherDashboardData, setLoading, setError, setCourses, setCourseDetails, setBatchDetails, setSectionStudents, clearAttendanceForm, setSearchedAttendance, setAttendanceHistory, setSubjects } from '../redux/slices/teacherSlice';
 import { toast } from 'react-hot-toast'; // Or your preferred toast library
 
 
@@ -26,6 +26,8 @@ export const teacherService = {
             dispatch(setLoading({ key: 'dashboard', value: true }));
 
             const { data } = await api.get('/teacher/dashboard');
+            console.log(data);
+
             dispatch(setTeacherDashboardData(data.data));
             dispatch(setLoading({ key: 'dashboard', value: false }));
 
@@ -70,6 +72,8 @@ export const teacherService = {
         try {
             dispatch(setLoading({ key: 'details', value: true }));
             const { data } = await api.get(`/teacher/course-details/${courseId}`);
+            console.log(data);
+
             dispatch(setCourseDetails(data));
         } catch (error) {
             toast.error("Failed to fetch course details");
@@ -136,15 +140,36 @@ export const teacherService = {
 
     // This is a POST request with a custom loading/success state, so we write it out manually.
     searchStudentAttendance: (payload) => async (dispatch) => {
+
         try {
             dispatch(setLoading({ key: 'search', value: true }));
             const { data } = await api.post('/teacher/student-attendance', payload);
+            console.log(data);
+
             dispatch(setSearchedAttendance(data));
         } catch (error) {
+            console.log(error);
+
             toast.error(error.response?.data?.message || "Failed to search attendance");
             dispatch(setError(error.message));
         } finally {
             dispatch(setLoading({ key: 'search', value: false }));
         }
     },
+
+    getTeacherSubjects: () => async (dispatch) => {
+        try {
+            dispatch(setLoading({ key: 'subjects', value: true }));
+            const { data } = await api.get('/teacher/my-subjects');
+            console.log(data);
+
+            dispatch(setSubjects(data));
+        } catch (error) {
+            toast.error("Failed to fetch subjects");
+            dispatch(setError(error.message));
+        } finally {
+            dispatch(setLoading({ key: 'subjects', value: false }));
+        }
+    },
+
 };

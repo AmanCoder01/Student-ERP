@@ -122,12 +122,12 @@ const Subject = () => {
     const tableHeaders = ["S No.", "Subject Name", "Code", "Course", "Semester", "Credits", "Actions"];
 
     return (
-        <div className="px-4 sm:px-6 lg:px-8 py-8">
+        <div >
             <div className="sm:flex sm:items-center sm:justify-between mb-6">
-                <h1 className="text-2xl sm:text-3xl font-bold">Subjects</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold dark:text-gray-300">Subjects</h1>
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-full mt-3 sm:mt-0 sm:w-auto bg-black hover:bg-gray-800 py-2 px-4 sm:px-6 text-white rounded-md shadow-md transition"
+                    className="w-full mt-3 sm:mt-0 sm:w-auto bg-black hover:bg-gray-800 py-2 px-4 sm:px-6 text-white mr-24 dark:bg-gray-800 rounded-md shadow-md transition"
                 >
                     + Add Subject
                 </button>
@@ -137,7 +137,7 @@ const Subject = () => {
 
             <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-400">Subject Name</label>
                     <input
                         type="text"
                         value={filters.name}
@@ -147,7 +147,7 @@ const Subject = () => {
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject Code</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-400">Subject Code</label>
                     <input
                         type="text"
                         value={filters.code}
@@ -157,7 +157,7 @@ const Subject = () => {
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-400">Course</label>
                     <input
                         type="text"
                         value={filters.course}
@@ -242,26 +242,26 @@ const Subject = () => {
             <ResponsiveTable headers={tableHeaders}>
                 {currentSubjects?.length > 0 ? (
                     currentSubjects.map((subject, index) => (
-                        <tr key={subject._id} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                        <tr key={subject._id} className="hover:bg-gray-900 dark:bg-gray-800">
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                                 {(currentPage - 1) * itemsPerPage + index + 1}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                                 {subject.name}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                                 {subject.subjectCode}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                                 {subject.course?.name || "N/A"}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                                 {subject.semester}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                                 {subject.credits}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                                 <div className="flex gap-4">
                                     <FaEdit
                                         onClick={() => handleEdit(subject)}

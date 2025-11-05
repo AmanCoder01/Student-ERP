@@ -14,15 +14,16 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        // required: true,
         enum: ['Admin', 'Teacher', 'Student'],
+         required: true,
     },
     profileId: {
         type: mongoose.Schema.Types.ObjectId,
-        refPath: 'role', // Dynamic reference based on role
+        refPath: 'role', 
+        required: true,
     }
 }, {
-    timestamps: true // Adds createdAt and updatedAt timestamps
+    timestamps: true 
 });
 
 // Hash password before saving

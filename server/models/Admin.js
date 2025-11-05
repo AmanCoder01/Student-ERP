@@ -12,9 +12,6 @@ const adminSchema = new Schema({
         required: true,
         trim: true,
     },
-    dob: {
-        type: Date,
-    },
     contact: {
         type: String,
         trim: true,

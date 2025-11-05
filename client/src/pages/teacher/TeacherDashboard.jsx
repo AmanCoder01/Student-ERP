@@ -47,11 +47,11 @@ const TeacherDashboard = () => {
 
     // Bar Chart: Attendance percentage for recent classes
     const attendanceChartData = {
-        labels: dashboardData.recentAttendance.map(att => `${att.subject.name} (${att.section.name})`),
+        labels: dashboardData.recentAttendance.map(att => `${att.subject.name.slice(0, 10)} (${att.section.name})`),
         datasets: [{
             label: 'Attendance %',
             data: dashboardData.recentAttendance.map(att => {
-                const present = att.students.filter(s => s.status === 'present').length;
+                const present = att.students.filter(s => s.status === 'Present').length;
                 const total = att.students.length;
                 return total > 0 ? (present / total) * 100 : 0;
             }),
@@ -63,8 +63,11 @@ const TeacherDashboard = () => {
 
     // Doughnut Chart: Present vs Absent for the most recent class
     const latestAttendance = dashboardData.recentAttendance[0];
-    const presentCount = latestAttendance?.students.filter(s => s.status === 'present').length || 0;
-    const absentCount = latestAttendance?.students.filter(s => s.status === 'absent').length || 0;
+    console.log(latestAttendance);
+    
+    const presentCount = latestAttendance?.students.filter(s => s.status === 'Present').length || 0;
+    const absentCount = latestAttendance?.students.filter(s => s.status === 'Absent').length || 0;
+
 
     const doughnutChartData = {
         labels: ['Present', 'Absent'],
@@ -79,9 +82,9 @@ const TeacherDashboard = () => {
 
 
     return (
-        <div className='px-6 py-8 bg-gray-50 min-h-screen'>
-            <h1 className="text-3xl font-bold mb-2">Teacher Dashboard</h1>
-            <p className="text-lg text-gray-600 mb-6">Welcome back, {dashboardData.teacherInfo.name}!</p>
+        <div className='px-6 py-8 bg-gray-100 dark:bg-gray-900 min-h-screen'>
+            <h1 className="text-3xl font-bold mb-2 dark:text-gray-100">Teacher Dashboard</h1>
+            <p className="text-lg text-gray-600 mb-6 dark:text-gray-200">Welcome back, {dashboardData.teacherInfo.name}!</p>
 
             {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6 mb-8">
@@ -98,7 +101,7 @@ const TeacherDashboard = () => {
                 <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow">
                     <h2 className="text-xl font-semibold mb-4">Latest Class Status ({latestAttendance?.subject.name})</h2>
                     {(presentCount + absentCount > 0) ?
-                        <Doughnut data={doughnutChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                        <Doughnut data={doughnutChartData}  />
                         : <p className="text-center text-gray-500 mt-10">No attendance data for the latest class.</p>
                     }
                 </div>
@@ -126,7 +129,7 @@ const TeacherDashboard = () => {
                                     <td className="p-3">{att.subject.name}</td>
                                     <td className="p-3">{att.section.name}</td>
                                     <td className="p-3 font-semibold">
-                                        {att.students.filter(s => s.status === 'present').length} / {att.students.length} Present
+                                        {att.students.filter(s => s.status === 'Present').length} / {att.students.length} Present
                                     </td>
                                 </tr>
                             ))}

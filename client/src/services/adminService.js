@@ -1,5 +1,5 @@
 import api from './api';
-import { getDepartments, addDepartment, deleteDepartment, getCourses, addCourse, deleteCourse, setDashboardData, getBatches, addBatch, deleteBatch, getSections, addSection, deleteSection, deleteSubject, addSubject, getSubjects, getTeachers, getStudents, addTeacher } from '../redux/slices/adminSlice';
+import { getDepartments, addDepartment, deleteDepartment, getCourses, addCourse, deleteCourse, setDashboardData, getBatches, addBatch, deleteBatch, getSections, addSection, deleteSection, deleteSubject, addSubject, getSubjects, getTeachers, getStudents, addTeacher, addStudent } from '../redux/slices/adminSlice';
 import toast from 'react-hot-toast';
 
 export const adminService = {
@@ -26,6 +26,8 @@ export const adminService = {
         try {
             const { data } = await api.post('/admin/departments', formData);
             dispatch(addDepartment(data.department));
+            console.log(data);
+
             toast.success(data.message);
             return true;
         } catch (error) {
@@ -252,28 +254,57 @@ export const adminService = {
         }
     },
 
-    fetchStudents: () => async (dispatch) => {
-        try {
-            const { data } = await api.get('/admin/students');
-            // console.log(data);
+    // fetchStudents: () => async (dispatch) => {
+    //     try {
+    //         const { data } = await api.get('/admin/students');
+    //         // console.log(data);
 
-            dispatch(getStudents(data.students));
-        } catch (error) {
-            toast.error("Failed to fetch students");
-        }
-    },
+    //         dispatch(getStudents(data.students));
+    //     } catch (error) {
+    //         toast.error("Failed to fetch students");
+    //     }
+    // },
+
+    fetchStudents:
+        (page = 1, limit = 10, search = "") =>
+            async (dispatch) => {
+                try {
+                    const { data } = await api.get("/admin/students", {
+                        params: { page, limit, search },
+                    });
+
+                    dispatch(
+                        getStudents({
+                            students: data.students || [],
+                            total: data.total || 0,
+                            page: data.page || 1,
+                            pages: data.pages || 1,
+                        })
+                    );
+                    return data;
+                } catch (error) {
+                    console.error(error);
+                    toast.error("Failed to fetch students");
+                    return false;
+                }
+            },
 
     createStudent: (formData) => async (dispatch) => {
+        console.log(formData);
+
         try {
             const { data } = await api.post('/admin/students', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
+            console.log(data);
+
             dispatch(addStudent(data.student));
             toast.success(data.message);
             return true;
         } catch (error) {
+            console.log(error);
             toast.error(error.response?.data?.message || "Failed to create student");
             return false;
         }
@@ -306,4 +337,22 @@ export const adminService = {
             return false;
         }
     },
+
+    bulkUploadStudents: (formData) => async (dispatch, getState) => {
+        try {
+            const token = getState().auth?.token;
+            const res = await api.post('/admin/students/bulk', formData, {
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            console.log(res.data);
+
+            return res.data;
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
+    }
 };

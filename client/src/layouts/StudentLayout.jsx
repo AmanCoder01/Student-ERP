@@ -18,11 +18,7 @@ const StudentLayout = () => {
 
     const navLinks = [
         { path: "/student", label: "Dashboard", end: true },
-        { path: "/student/attendance", label: "Attendance" },
-        { path: "/student/timetable", label: "Time Table" },
-        { path: "/student/subjects", label: "Subjects" },
-        { path: "/student/assignments", label: "Assignments" },
-        { path: "/student/results", label: "Results" },
+        { path: "/student/attendance", label: "My Attendance" },
         { path: "/student/notifications", label: "Notifications" },
     ];
 

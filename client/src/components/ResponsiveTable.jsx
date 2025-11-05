@@ -11,7 +11,7 @@ const ResponsiveTable = ({ headers, children, noDataMessage }) => {
                                 {headers.map((header, index) => (
                                     <th
                                         key={index}
-                                        className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+                                        className="px-4 py-3 text-left text-xs font-medium text-white dark:bg-gray-700 uppercase tracking-wider"
                                     >
                                         {header}
                                     </th>

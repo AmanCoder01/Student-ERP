@@ -23,11 +23,6 @@ exports.login = async (req, res) => {
         // Generate token and send as cookie
         const token = generateToken(user._id);
 
-        // res.cookie('token', token, {
-        //     httpOnly: true,
-        //     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-        // });
-
         res.status(200).json({
             _id: user._id,
             email: user.email,
@@ -85,11 +80,12 @@ exports.updatePassword = async (req, res) => {
 // get user profile
 exports.getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
+        const user = await User.findById(req.user._id).select('-password').populate('profileId');
+        
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        res.json(user);
+        res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

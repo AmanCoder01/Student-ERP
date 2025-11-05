@@ -2,8 +2,10 @@ const express = require('express');
 
 
 const { protect, authorize } = require('../middlewares/authMiddleware');
-const { getDashboardStats, addDepartment, getDepartments, createCourse, getCourses, createBatch, getBatches, createSection, getSections, createSubject, getSubjects, createTeacher, getTeachers, createStudent, getStudents, createNotice, deleteDepartment, deleteCourses, deleteBatch, deleteSubject, deleteSection, deleteTeacher } = require('../controllers/adminController');
+const { getDashboardStats, addDepartment, getDepartments, createCourse, getCourses, createBatch, getBatches, createSection, getSections, createSubject, getSubjects, createTeacher, getTeachers, createStudent, getStudents, createNotice, deleteDepartment, deleteCourses, deleteBatch, deleteSubject, deleteSection, deleteTeacher, bulkUploadStudents } = require('../controllers/adminController');
 const upload = require('../utils/cloudinary');
+const multer = require('multer'); // <--- this was missing
+const csvUpload = multer({ dest: 'uploads/' }); 
 
 const router = express.Router();
 
@@ -59,6 +61,8 @@ router.delete("/teachers/:id", deleteTeacher);
 router.post('/students', upload.single('profileImage'), createStudent);
 router.get("/students", getStudents);
 
+
+router.post('/students/bulk', csvUpload.single('file'), bulkUploadStudents);
 
 // Notice
 // router.post('/notices', createNotice);

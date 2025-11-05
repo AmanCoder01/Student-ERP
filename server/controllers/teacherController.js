@@ -131,13 +131,13 @@ exports.getSectionStudents = async (req, res) => {
     try {
         const { sectionId } = req.params;
         const students = await Student.find({ section: sectionId }).select('name studentId rollNumber');
-        
+
         console.log(students);
-        
+
         res.json(students);
     } catch (error) {
         console.log(error);
-        
+
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
@@ -171,18 +171,19 @@ exports.submitAttendance = async (req, res) => {
 
 exports.getStudentAttendance = async (req, res) => {
     try {
-        const { studentId, subjectId } = req.body;
+        const { rollNumber, subjectId } = req.body;
         const teacherId = req.user.profileId;
 
-        if (!studentId || !subjectId) {
+        if (!rollNumber || !subjectId) {
             return res.status(400).json({ message: 'Student ID and Subject ID are required.' });
         }
 
         // 1. Find the student and subject details for the response
         const [student, subject] = await Promise.all([
-            Student.findById(studentId).select('name studentId rollNumber'),
-            Subject.findById(subjectId).select('name code')
+            Student.findOne({ rollNumber }).select('name studentId rollNumber'),
+            Subject.findById(subjectId).select('name subjectCode')
         ]);
+
 
         if (!student || !subject) {
             return res.status(404).json({ message: 'Student or Subject not found.' });
@@ -195,6 +196,8 @@ exports.getStudentAttendance = async (req, res) => {
         });
 
         const totalClassesCount = totalClasses.length;
+
+
 
         if (totalClassesCount === 0) {
             return res.json({
@@ -209,11 +212,13 @@ exports.getStudentAttendance = async (req, res) => {
         // 3. Count how many of those classes the student was present for
         let attendedClassesCount = 0;
         for (const record of totalClasses) {
-            const studentRecord = record.students.find(s => s.student.toString() === studentId);
+            const studentRecord = record.students.find(s => s.student.toString() === student._id.toString());
             if (studentRecord && studentRecord.status === 'Present') {
                 attendedClassesCount++;
             }
         }
+
+
 
         // 4. Calculate the percentage
         const percentage = (attendedClassesCount / totalClassesCount) * 100;
@@ -227,6 +232,7 @@ exports.getStudentAttendance = async (req, res) => {
         });
 
     } catch (error) {
+        console.log(error);
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
@@ -241,6 +247,34 @@ exports.getAttendanceHistory = async (req, res) => {
             .populate('batch', 'name')
             .sort({ date: -1 });
         res.json(history);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+
+exports.getTeacherProfile = async (req, res) => {
+    try {
+        const teacher = await Teacher.findById(req.user.profileId)
+            .populate('department', 'name')
+            .populate('user', 'email username');
+        if (!teacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+        res.json(teacher);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+exports.getTeacherSubjects = async (req, res) => {
+    try {
+        const teacher = await Teacher.findById(req.user.profileId).populate('subjects');
+        
+        if (!teacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+        res.json(teacher.subjects);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }

@@ -72,6 +72,15 @@ const teacherSlice = createSlice({
             state.students = action.payload;
             state.error = null;
         },
+
+        setSubjects: (state, action) => {
+            state.subjects = action.payload;
+            state.error = null;
+        },
+
+
+
+
         clearAttendanceForm: (state) => {
             // Reset state after successful submission
             state.students = [];
@@ -79,17 +88,18 @@ const teacherSlice = createSlice({
             state.subjects = [];
             state.batches = [];
             state.sections = [];
+        },
+        setAttendanceHistory: (state, action) => {
+            state.attendanceHistory = action.payload;
+        },
+        setSearchedAttendance: (state, action) => {
+            state.searchedAttendance = action.payload;
+        },
+        clearSearchedAttendance: (state) => {
+            state.searchedAttendance = null;
         }
     },
-    setAttendanceHistory: (state, action) => {
-        state.attendanceHistory = action.payload;
-    },
-    setSearchedAttendance: (state, action) => {
-        state.searchedAttendance = action.payload;
-    },
-    clearSearchedAttendance: (state) => {
-        state.searchedAttendance = null;
-    }
+
 });
 
 export const {
@@ -103,7 +113,8 @@ export const {
     clearAttendanceForm,
     setAttendanceHistory,
     setSearchedAttendance,
-    clearSearchedAttendance
+    clearSearchedAttendance,
+    setSubjects
 } = teacherSlice.actions;
 
 export default teacherSlice.reducer;

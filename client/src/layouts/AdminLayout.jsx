@@ -4,16 +4,14 @@ import { HiMenuAlt3 } from 'react-icons/hi';
 import { IoMdClose } from 'react-icons/io';
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
+import ThemeToggleButton from '../components/ThemeToggleButton';
 
 const AdminLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const location = useLocation();
+    
 
     const dispatch = useDispatch();
-
-    const navLinkStyles = ({ isActive }) => ({
-        backgroundColor: isActive ? '#374151' : '',
-    });
 
     const navLinks = [
         { path: "/admin", label: "Dashboard", end: true },
@@ -21,14 +19,15 @@ const AdminLayout = () => {
         { path: "/admin/course", label: "Courses" },
         { path: "/admin/batch", label: "Batches" },
         { path: "/admin/section", label: "Sections" },
-        { path: "/admin/subject", label: "Subjects" },
+        { path: "/admin/subject", label: "Technical Subjects" },
         { path: "/admin/teacher", label: "Teachers" },
         { path: "/admin/student", label: "Students" },
     ];
 
     const Sidebar = () => (
-        <div className="h-full flex flex-col p-5">
-            <h2 className="text-2xl font-bold mb-6">Admin Panel</h2>
+        // Sidebar container: controls the overall look
+        <div className="h-full flex flex-col p-5 ">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Admin Panel</h2>
 
             {/* Navigation Links */}
             <nav className="flex flex-col flex-grow space-y-2">
@@ -37,8 +36,14 @@ const AdminLayout = () => {
                         key={link.path}
                         to={link.path}
                         end={link.end}
-                        style={navLinkStyles}
-                        className="hover:bg-gray-700 p-2 rounded transition-colors"
+                        // Use a function in className for conditional styling
+                        className={({ isActive }) =>
+                            `p-2 rounded transition-colors ${
+                                isActive
+                                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' // Active link styles
+                                    : 'hover:bg-gray-200 dark:hover:bg-gray-700' // Inactive link hover styles
+                            }`
+                        }
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         {link.label}
@@ -50,15 +55,19 @@ const AdminLayout = () => {
             <div className="mt-auto space-y-2">
                 <NavLink
                     to="/admin/profile"
-                    style={navLinkStyles}
-                    className="hover:bg-gray-700 p-2 rounded block transition-colors"
+                    className={({ isActive }) =>
+                        `p-2 rounded block transition-colors ${
+                            isActive
+                                ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                                : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`
+                    }
                     onClick={() => setIsSidebarOpen(false)}
                 >
                     Profile
                 </NavLink>
                 <div
-                    // style={navLinkStyles}
-                    className="hover:bg-gray-700 p-2 rounded block transition-colors"
+                    className="hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded block transition-colors cursor-pointer"
                     onClick={() => dispatch(logout())}
                 >
                     Logout
@@ -70,7 +79,7 @@ const AdminLayout = () => {
     return (
         <div className="flex h-screen">
             {/* Desktop Sidebar */}
-            <aside className="hidden md:block w-64 bg-gray-900 text-white">
+            <aside className="hidden md:block w-64 bg-gray-100 dark:bg-gray-900 dark:text-white">
                 <Sidebar />
             </aside>
 
@@ -107,7 +116,10 @@ const AdminLayout = () => {
                 </header>
 
                 {/* Content */}
-                <main className="flex-1 p-6 bg-gray-100 overflow-auto">
+                <main className="flex-1 p-4 md:p-12 md:px-16  relative bg-gray-100 dark:bg-gray-900 overflow-auto">
+                    <div className='absolute right-20 top-14 animate-bounce '>
+                        <ThemeToggleButton/>
+                    </div>
                     <Outlet />
                 </main>
             </div>

@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import SecureRoute from './components/SecureRoute'
 import AdminLayout from './layouts/AdminLayout'
-import { fakeUser } from './auth/fakeAuth'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import Department from './pages/admin/Department'
 import Course from './pages/admin/Course'
@@ -13,7 +12,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setUser } from './redux/slices/authSlice'
 import toast from 'react-hot-toast'
 import Loader from './components/Loader'
-import { adminService } from './services/adminService'
 import Section from './pages/admin/Section'
 import Subject from './pages/admin/Subject'
 import Teacher from './pages/admin/Teacher'
@@ -33,6 +31,8 @@ const App = () => {
   const dispatch = useDispatch();
 
   const { user } = useSelector(state => state.auth);
+  const { theme } = useSelector((state) => state.theme);
+
 
 
   useEffect(() => {
@@ -50,25 +50,33 @@ const App = () => {
         });
         dispatch(setUser(res.data));
       } catch (error) {
-        localStorage.removeItem("token"); // Clear invalid token
+        localStorage.removeItem("token");
         toast.error(error.response?.data?.message || "Authentication failed");
       } finally {
         setIsInitialized(true);
       }
     };
-
-
     fetchUser();
   }, [dispatch, token]);
 
+
+  // Theme Setup
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
+
+
   if (!isInitialized) {
     return (
-      <div className='h-screen flex items-center justify-center'>
+      <div className='h-screen flex items-center justify-center dark:bg-gray-900'>
         <Loader />
       </div>
     )
-
-    // Or your loading component
   }
 
 
@@ -76,12 +84,11 @@ const App = () => {
     <Routes>
       <Route path="/login"
         element={
-          user && token ? <Navigate to={`/${user.role}`} replace /> : <Login />
+          user && token ? <Navigate to={`/${user.role.toLowerCase()}`} replace /> : <Login />
         } />
 
       {/* Admin Routes */}
-      <Route
-        path="/admin/*"
+      <Route path="/admin/*"
         element={
           <SecureRoute allowedRoles={["Admin"]} >
             <AdminLayout />
@@ -106,7 +113,6 @@ const App = () => {
         </SecureRoute>
       }>
         <Route index element={<StudentDashboard />} />
-
       </Route>
 
       {/* Teacher Routes */}
@@ -118,7 +124,7 @@ const App = () => {
         <Route index element={<TeacherDashboard />} />
         <Route path='take-attendance' element={<TakeAttendance />} />
         <Route path='student-attendance' element={<SearchAttendance />} />
-        <Route path='attendance-history' element={<AttendanceHistory  />} />  
+        <Route path='attendance-history' element={<AttendanceHistory />} />
       </Route>
 
 
@@ -129,8 +135,6 @@ const App = () => {
         }
       />
 
-
-      {/* Fallback */}
       <Route path="/unauthorized" element={<h1 className="text-center text-red-500 mt-10">Unauthorized</h1>} />
       <Route path="*" element={<h1 className="text-center mt-10">404 Page Not Found</h1>} />
     </Routes>
